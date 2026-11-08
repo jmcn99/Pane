@@ -1321,7 +1321,7 @@ if (launchRemoteSetup) {
     // after the window opens reads the cache instead of blocking on the shell.
     void warmShellPath();
     await initializeServices();
-    if (process.env.PANE_DISABLE_OS_INTEGRATION !== '1') syncAutoStartOnBoot(app, configManager.getConfig().autoStartOnBoot !== false);
+    syncAutoStartOnBoot(app, configManager.getConfig().autoStartOnBoot !== false);
     void addRunpaneToUserPathBestEffort();
     if (process.env.PANE_DISABLE_OS_INTEGRATION !== '1') setTimeout(() => syncPaneMcpForApp({
       isPackaged: app.isPackaged,
@@ -1462,6 +1462,8 @@ if (launchRemoteSetup) {
 
 // Initialize worktree pool — cleanup orphans and seed reserves
   setTimeout(async () => {
+    // Reserves belong to the Pane that owns this data directory; a second one would delete them.
+    if (!paneDaemonHost?.duties.housekeeping) return;
     try {
       const projects = databaseService.getAllProjects();
       // Cleanup leftover reserves from previous runs — await before seeding new ones
