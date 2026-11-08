@@ -842,7 +842,8 @@ function NamedSessionWorkspace({ view, error, chrome, onOverviewUpdate, onRetry 
 
   const approvalOpen = useApprovalColumnStore(state => state.open[`session:${view.session.id}`] !== undefined);
   const sessionControls = (<>
-    <SessionApprovalsButton sessionId={view.session.id} />
+    {/* Shown inside another approval's column (its origin tab), the Session doesn't open approvals of its own. */}
+    {!chrome.inline && <SessionApprovalsButton sessionId={view.session.id} />}
     <SwitchToChatButton key={view.panel.id} panel={view.panel} palette={chrome.isFocused ? 'session' : undefined} className="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded text-text-secondary hover:bg-surface-hover hover:text-text-primary" />
     <Tooltip content="Session settings" side="bottom">
       <button type="button" aria-label="Session settings" onClick={() => setShowSettings(true)}
@@ -862,7 +863,7 @@ function NamedSessionWorkspace({ view, error, chrome, onOverviewUpdate, onRetry 
           <SessionWorkspacePanels agentPanel={view.panel} agentPanelIds={Object.values(view.session.panelIds)}
             toolbarActions={sessionControls}
             stageNotice={showsTrustPrompt && <FolderTrustNotice />}
-            approval={{
+            approval={chrome.inline ? undefined : {
               open: approvalOpen,
               onClose: () => useApprovalColumnStore.getState().close(`session:${view.session.id}`),
               render: (closeLabel, onClose) => (
