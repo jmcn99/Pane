@@ -86,6 +86,18 @@ jobs:
     - name: Run main process test suite
       run: CI=1 pnpm --filter main exec vitest run --retry=1 --reporter=default --reporter=../scripts/vitest-retry-report.mjs
 
+    - name: PROBE C5 repeat the fixed flaky tests 20 times
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: |
+        cd main
+        pass=0; fail=0
+        for i in $(seq 1 20); do
+          if npx vitest run src/daemon/client/remotePaneClient.test.ts src/daemon/client/connectionChecks.test.ts src/services/repoFinder.test.ts src/services/runpaneShim.test.ts src/services/gitArguments.test.ts > "$RUNNER_TEMP/c5-$i.log" 2>&1; then pass=$((pass+1)); else fail=$((fail+1)); echo "::error::run $i failed"; tail -40 "$RUNNER_TEMP/c5-$i.log"; fi
+        done
+        echo "C5 $RUNNER_OS: $pass passed, $fail failed of 20" | tee -a "$GITHUB_STEP_SUMMARY"
+        [ "$fail" -eq 0 ]
+
     - name: Run frontend unit tests
       run: CI=1 pnpm --filter frontend exec vitest run --retry=1 --reporter=default --reporter=../scripts/vitest-retry-report.mjs
 
@@ -380,6 +392,18 @@ jobs:
 
     - name: Run main process unit tests
       run: pnpm --filter main exec vitest run --retry=1 --reporter=default --reporter=../scripts/vitest-retry-report.mjs
+
+    - name: PROBE C5 repeat the fixed flaky tests 20 times
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: |
+        cd main
+        pass=0; fail=0
+        for i in $(seq 1 20); do
+          if npx vitest run src/daemon/client/remotePaneClient.test.ts src/daemon/client/connectionChecks.test.ts src/services/repoFinder.test.ts src/services/runpaneShim.test.ts src/services/gitArguments.test.ts > "$RUNNER_TEMP/c5-$i.log" 2>&1; then pass=$((pass+1)); else fail=$((fail+1)); echo "::error::run $i failed"; tail -40 "$RUNNER_TEMP/c5-$i.log"; fi
+        done
+        echo "C5 $RUNNER_OS: $pass passed, $fail failed of 20" | tee -a "$GITHUB_STEP_SUMMARY"
+        [ "$fail" -eq 0 ]
 
     - name: Finish main process type checking
       if: ${{ !cancelled() }}
